@@ -1,0 +1,42 @@
+{
+  "clips": [
+    {
+      "clip": "WORD03_13.mp4",
+      "expected": "WORD03",
+      "predicted": "WORD03",
+      "words": [
+        "WORD03"
+      ],
+      "correct": true,
+      "fps": 2728.0,
+      "landmark_ms": 0.0,
+      "model_ms": 0.48,
+      "end_to_end_ms": 0.4,
+      "frames": 45
+    },
+    {
+      "clip": "WORD07_14.mp4",
+      "expected": "WORD07",
+      "predicted": "WORD07",
+      "words": [
+        "WORD07"
+      ],
+      "correct": true,
+      "fps": 2618.8,
+      "landmark_ms": 0.0,
+      "model_ms": 0.46,
+      "end_to_end_ms": 0.4,
+      "frames": 45
+    }
+  ],
+  "accuracy": 100.0,
+  "overall": {
+    "fps": 2672.3,
+    "landmark_ms": 0.0,
+    "model_ms": 0.47,
+    "end_to_end_ms": 0.4,
+    "frames": 90
+  },
+  "model_mb": 0.68835,
+  "classes": 20
+}

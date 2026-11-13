@@ -1,0 +1,7 @@
+metric,target,measured,unit,device,runtime,pass
+top1_accuracy,>=70,70.00,%,"Intel64 Family 6 Model 186 Stepping 2, GenuineIntel","ONNX Runtime 1.31.1 INT8, CPU, 1 thread",PASS
+latency_p95,<=50,0.74,ms,"Intel64 Family 6 Model 186 Stepping 2, GenuineIntel","ONNX Runtime 1.31.1 INT8, CPU, 1 thread",PASS
+model_size,<=25,0.70,MB,"Intel64 Family 6 Model 186 Stepping 2, GenuineIntel","ONNX Runtime 1.31.1 INT8, CPU, 1 thread",PASS
+accuracy_drop_robustness,<=5,10.00,pt,"Intel64 Family 6 Model 186 Stepping 2, GenuineIntel","ONNX Runtime 1.31.1 INT8, CPU, 1 thread",FAIL
+avg_power,<=500,,mW,"Intel64 Family 6 Model 186 Stepping 2, GenuineIntel","ONNX Runtime 1.31.1 INT8, CPU, 1 thread",
+thermal_drift_10min,<=20,,%,"Intel64 Family 6 Model 186 Stepping 2, GenuineIntel","ONNX Runtime 1.31.1 INT8, CPU, 1 thread",

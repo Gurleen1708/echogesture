@@ -1,0 +1,8 @@
+# Python 3.10-3.12 recommended (MediaPipe wheels lag behind the newest Python releases)
+numpy
+opencv-python
+mediapipe>=0.10.14
+onnx
+onnxruntime
+torch          # training + export only; inference needs only the lines above
+pyttsx3        # optional: --speak in the live demo

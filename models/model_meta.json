@@ -1,0 +1,11 @@
+{
+  "classes": 100,
+  "seq_len": 32,
+  "feat_dim": 154,
+  "fp32_mb": 2.631,
+  "int8_mb": 0.703,
+  "val_top1_fp32": 76.36,
+  "val_top1_int8": 76.36,
+  "test_top1_fp32": 69.0,
+  "test_top1_int8": 70.0
+}
