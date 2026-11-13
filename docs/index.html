@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EchoGesture · on-device ASL recognition</title>
+<meta name="description" content="Live American Sign Language word recognition that runs entirely on your device. Nothing is uploaded.">
+<meta name="theme-color" content="#0e0f13">
+<!-- Privacy guarantee: the page may only download its own files and the model/library files below.
+     Every other network request (analytics, logging, uploads) is blocked by the browser. -->
+<meta http-equiv="Content-Security-Policy"
+      content="connect-src 'self' https://cdn.jsdelivr.net https://storage.googleapis.com blob: data:">
+<script type="importmap">
+{ "imports": {
+    "@mediapipe/tasks-vision": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.2.3/vision_bundle.mjs",
+    "onnxruntime-web": "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/dist/ort.wasm.min.mjs"
+} }
+</script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo">✋</span> EchoGesture</div>
+  <div class="badge" title="Camera frames are processed in this browser tab and never leave your device.">🔒 Runs 100% on your device · nothing uploaded</div>
+</header>
+
+<main>
+  <!-- Start screen -->
+  <section id="intro" class="card intro">
+    <h1>Live sign-language subtitles, right in your browser</h1>
+    <p>Sign one of 100 American Sign Language words in front of your camera and EchoGesture names it.
+       The whole model is under 1 MB and runs on your phone or laptop. No video is ever sent anywhere.</p>
+    <button id="startBtn" class="primary">Start camera</button>
+    <div id="loading" class="loading hidden">
+      <div class="bar"><div id="barFill"></div></div>
+      <div id="loadText">Downloading models…</div>
+    </div>
+    <p id="err" class="err hidden"></p>
+    <p class="tips">Tips: keep your upper body and both hands in view, use good light, sign at a normal pace,
+      then lower your hands. Not sure what to sign? Open <a href="#" id="vocabLink">the word list</a>.</p>
+  </section>
+
+  <!-- Live view -->
+  <section id="live" class="hidden">
+    <div class="stage" id="stage">
+      <video id="video" playsinline muted></video>
+      <canvas id="overlay"></canvas>
+      <div class="stats" id="stats" title="Measured live on this device">– fps</div>
+      <div class="controls">
+        <button id="flipBtn" class="ghost" title="Switch between front and back camera">⇄ Camera</button>
+        <button id="vocabBtn" class="ghost">Word list</button>
+      </div>
+    </div>
+
+    <div class="card pred">
+      <div class="label">Best guess</div>
+      <div id="word" class="word idle">Show a sign…</div>
+      <div id="top3" class="top3"></div>
+    </div>
+
+    <div class="card sentence">
+      <div id="sentence" class="sentenceText"><span class="muted">Recognised words appear here</span></div>
+      <div class="sentenceBtns">
+        <button id="speakBtn" class="ghost" title="Read aloud (offline browser speech)">🔊 Speak</button>
+        <button id="clearBtn" class="ghost">Clear</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Word list -->
+  <dialog id="vocabDialog">
+    <div class="dlgHead">
+      <h2>The 100 words EchoGesture knows</h2>
+      <button id="closeVocab" class="ghost" aria-label="Close">✕</button>
+    </div>
+    <input id="vocabSearch" type="search" placeholder="Search words…" autocomplete="off">
+    <p class="muted small">Tap a word to see how it is signed (opens SignASL.org).</p>
+    <ul id="vocabList" class="vocabList"></ul>
+  </dialog>
+</main>
+
+<footer>
+  WLASL100 vocabulary · INT8 model 0.70 MB · test accuracy 70% ·
+  MediaPipe + ONNX Runtime in the browser ·
+  <a href="https://github.com/Gurleen1708/echogesture" target="_blank" rel="noopener">Source on GitHub</a><br>
+  Team Mudra · Samsung PRISM XR Hackathon 2026 · Model trained on
+  <a href="https://dxli94.github.io/WLASL/" target="_blank" rel="noopener">WLASL</a> (academic, non-commercial use).
+</footer>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
