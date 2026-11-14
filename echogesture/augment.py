@@ -71,15 +71,22 @@ def jitter(clip: dict, rng: np.random.Generator, img_sigma: float = 0.004, world
     return c
 
 
-def train_augment(clip: dict, rng: np.random.Generator, allow_mirror: bool = True) -> dict:
+def train_augment(clip: dict, rng: np.random.Generator, allow_mirror: bool = True, strong: bool = False) -> dict:
+    """Random training augmentation. `strong` widens every range (camera angle, occluded hand,
+    lost detections, noise) so the model sees harder conditions more often. It does not replay the
+    fixed robustness test: angles, spans and drop rates are drawn from broad random distributions."""
+    if strong:
+        roll_s, yaw_s, pitch_s, p_occ, p_span, span_hi, drop_hi, noise = 0.18, 0.45, 0.25, 0.8, 0.6, 0.45, 0.25, 1.5
+    else:
+        roll_s, yaw_s, pitch_s, p_occ, p_span, span_hi, drop_hi, noise = 0.12, 0.30, 0.15, 0.5, 0.5, 0.35, 0.15, 1.0
     c = clip
     if allow_mirror and rng.random() < 0.5:
         c = mirror(c)
-    c = rotate(c, roll=rng.normal(0, 0.12), yaw=rng.normal(0, 0.30), pitch=rng.normal(0, 0.15))
-    if rng.random() < 0.5:
-        c = occlude(c, rng, span=rng.uniform(0.1, 0.35) if rng.random() < 0.5 else 0.0,
-                    drop=rng.uniform(0.0, 0.15))
-    return jitter(c, rng)
+    c = rotate(c, roll=rng.normal(0, roll_s), yaw=rng.normal(0, yaw_s), pitch=rng.normal(0, pitch_s))
+    if rng.random() < p_occ:
+        c = occlude(c, rng, span=rng.uniform(0.1, span_hi) if rng.random() < p_span else 0.0,
+                    drop=rng.uniform(0.0, drop_hi))
+    return jitter(c, rng, img_sigma=0.004 * noise, world_sigma=0.003 * noise)
 
 
 def robustness_perturb(clip: dict, rng: np.random.Generator) -> dict:

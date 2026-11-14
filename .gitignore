@@ -7,3 +7,7 @@ models/checkpoint.pt
 models/checkpoint.history.json
 results/screenshot_*.png
 demo_footage/
+models/v1_backup/
+models/v2_backup/
+models/checkpoint*.pt
+models/checkpoint*.history.json

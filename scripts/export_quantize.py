@@ -1,6 +1,9 @@
 """Conversion script: PyTorch checkpoint -> ONNX FP32 -> ONNX INT8 (static, post-training).
 
     python scripts/export_quantize.py --manifest data/manifest.csv --cache data/cache
+    python scripts/export_quantize.py --manifest data/manifest.csv --cache data/cache --checkpoint a.pt b.pt c.pt   # ensemble
+
+With several checkpoints the exported model averages their logits (one ONNX file, same input/output).
 """
 import argparse
 import json
@@ -14,9 +17,21 @@ import torch
 from onnxruntime.quantization import CalibrationDataReader, QuantFormat, QuantType, quantize_static
 
 from echogesture import config
+from echogesture.augment import robustness_perturb
 from echogesture.data import load_split
 from echogesture.features import clip_to_input
 from echogesture.model import SignTCN
+
+
+class Ensemble(torch.nn.Module):
+    """Averages the logits of several models trained the same way with different seeds."""
+
+    def __init__(self, models):
+        super().__init__()
+        self.models = torch.nn.ModuleList(models)
+
+    def forward(self, x):
+        return torch.stack([m(x) for m in self.models]).mean(dim=0)
 
 
 class Reader(CalibrationDataReader):
@@ -37,15 +52,22 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--manifest", required=True)
     ap.add_argument("--cache", required=True)
-    ap.add_argument("--checkpoint", default=str(config.MODELS_DIR / "checkpoint.pt"))
+    ap.add_argument("--checkpoint", nargs="+", default=[str(config.MODELS_DIR / "checkpoint.pt")],
+                    help="one checkpoint, or several to export their average (ensemble)")
     ap.add_argument("--calib", type=int, default=300, help="number of training clips used for calibration")
     args = ap.parse_args()
 
-    ckpt = torch.load(args.checkpoint, map_location="cpu")
-    vocab = ckpt["vocab"]
-    model = SignTCN(len(vocab))
-    model.load_state_dict(ckpt["state_dict"])
-    model.eval()
+    models, vocab = [], None
+    for path in args.checkpoint:
+        ckpt = torch.load(path, map_location="cpu")
+        if vocab is not None and ckpt["vocab"] != vocab:
+            sys.exit(f"{path} was trained on a different vocabulary")
+        vocab = ckpt["vocab"]
+        m = SignTCN(len(vocab))
+        m.load_state_dict(ckpt["state_dict"])
+        models.append(m.eval())
+    model = (models[0] if len(models) == 1 else Ensemble(models)).eval()
+    print(f"exporting {len(models)} model(s): {', '.join(args.checkpoint)}")
 
     dummy = torch.zeros(1, config.SEQ_LEN, config.FEAT_DIM)
     kwargs = dict(input_names=["features"], output_names=["logits"], opset_version=17)
@@ -63,7 +85,7 @@ if __name__ == "__main__":
                     activation_type=QuantType.QInt8, weight_type=QuantType.QInt8)
 
     config.VOCAB_FILE.write_text("\n".join(vocab) + "\n", encoding="utf-8")
-    meta = {"classes": len(vocab), "seq_len": config.SEQ_LEN, "feat_dim": config.FEAT_DIM,
+    meta = {"checkpoints": [Path(c).name for c in args.checkpoint], "classes": len(vocab), "seq_len": config.SEQ_LEN, "feat_dim": config.FEAT_DIM,
             "fp32_mb": round(config.FP32_MODEL.stat().st_size / 1e6, 3),
             "int8_mb": round(config.INT8_MODEL.stat().st_size / 1e6, 3)}
     for name, splits in (("val", ("val",)), ("test", ("test",))):
@@ -72,5 +94,9 @@ if __name__ == "__main__":
             x = np.stack([clip_to_input(c) for c in clips])
             meta[f"{name}_top1_fp32"] = round(accuracy(config.FP32_MODEL, x, y), 2)
             meta[f"{name}_top1_int8"] = round(accuracy(config.INT8_MODEL, x, y), 2)
+            if name == "val":  # validation under hard conditions (same fixed seed as train.py): used for model choice
+                hrng = np.random.default_rng(1234)
+                hx = np.stack([clip_to_input(robustness_perturb(c, hrng)) for c in clips])
+                meta["val_hard_top1_int8"] = round(accuracy(config.INT8_MODEL, hx, y), 2)
     config.META_FILE.write_text(json.dumps(meta, indent=2))
     print(json.dumps(meta, indent=2))

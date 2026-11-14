@@ -1,8 +1,8 @@
 {
   "robustness_source": "landmark-level perturbation (angle, occlusion, lost detections)",
   "test_clips": 100,
-  "top1_clean": 70.0,
-  "top1_hard": 60.0,
-  "latency_ms_median": 0.49389999912818894,
-  "latency_ms_p95": 0.7359549999819136
+  "top1_clean": 75.0,
+  "top1_hard": 68.0,
+  "latency_ms_median": 0.5115500025567599,
+  "latency_ms_p95": 1.1254649980401155
 }
